@@ -23,6 +23,11 @@ function App() {
     const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
     const url = `${baseUrl}/ask`;
 
+    if (!prompt.trim()) {
+      setError('Please enter a prompt.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setOutput('');
@@ -37,17 +42,27 @@ function App() {
       });
 
       if (!res.ok) {
+        // Use a cloned response to avoid consuming the original body
         const maybeJson = await safeParseJson(res);
-        const message = maybeJson?.detail || maybeJson?.error || `Request failed: ${res.status} ${res.statusText}`;
+        const message =
+          (maybeJson && (maybeJson.detail || maybeJson.error || maybeJson.message)) ||
+          `Request failed: ${res.status} ${res.statusText}`;
         throw new Error(message);
       }
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       // Expecting { output: string }
-      const text = typeof data?.output === 'string' ? data.output : JSON.stringify(data);
-      setOutput(text);
+      const text =
+        typeof data?.output === 'string'
+          ? data.output
+          : (typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+      setOutput(text || '');
     } catch (e) {
-      setError(e?.message || 'Something went wrong while contacting the AI service.');
+      const fallback =
+        e && typeof e.message === 'string'
+          ? e.message
+          : 'Something went wrong while contacting the AI service.';
+      setError(fallback);
     } finally {
       setLoading(false);
     }
@@ -56,7 +71,9 @@ function App() {
   // Helper to safely parse JSON without throwing
   async function safeParseJson(res) {
     try {
-      return await res.json();
+      // Clone the response so the original body can still be consumed later if needed
+      const cloned = res.clone();
+      return await cloned.json();
     } catch {
       return null;
     }
