@@ -42,11 +42,22 @@ function App() {
       });
 
       if (!res.ok) {
-        // Use a cloned response to avoid consuming the original body
+        // Try to extract a meaningful message from the response body
         const maybeJson = await safeParseJson(res);
-        const message =
-          (maybeJson && (maybeJson.detail || maybeJson.error || maybeJson.message)) ||
-          `Request failed: ${res.status} ${res.statusText}`;
+        const upstreamDetail = maybeJson && (maybeJson.detail || maybeJson.error || maybeJson.message);
+        let message = upstreamDetail || `Request failed: ${res.status} ${res.statusText}`;
+
+        // Add contextual hints for common cases
+        if (res.status === 502) {
+          message += ' — Upstream service error. Check that the backend has a valid GOOGLE_API_KEY and network access.';
+        } else if (res.status === 500) {
+          message += ' — Server configuration error. Ensure GOOGLE_API_KEY is set in the backend environment.';
+        } else if (res.status === 404) {
+          message += ' — Endpoint not found. Confirm the backend URL and /ask route.';
+        }
+
+        // Include the target URL to aid debugging
+        message += ` (POST ${url})`;
         throw new Error(message);
       }
 
