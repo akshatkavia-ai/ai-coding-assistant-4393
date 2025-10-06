@@ -20,3 +20,4 @@ If deploying or using a non-local backend, set REACT_APP_BACKEND_URL to the back
 
 - CORS is configured on the backend to allow local preview.
 - Keyboard shortcut: Ctrl/Cmd + Enter submits the prompt.
+- No database is used; no DB configuration is required.

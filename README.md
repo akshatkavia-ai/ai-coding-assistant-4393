@@ -64,3 +64,7 @@ CORS: Backend is permissive for preview. For production, restrict allow_origins 
 - Backend workspace: ai-coding-assistant-4392/backend_api
 
 Make sure to run both services during local development.
+
+## No Database
+
+This project does not use any database. No DB setup or credentials are required.
