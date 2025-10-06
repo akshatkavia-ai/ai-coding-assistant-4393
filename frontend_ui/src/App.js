@@ -122,6 +122,7 @@ function App() {
 
         <footer className="footer">
           <span className="hint">
+            {/* Uses REACT_APP_BACKEND_URL, defaulting to localhost:3001 for local preview */}
             Backend: {process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}
           </span>
         </footer>
