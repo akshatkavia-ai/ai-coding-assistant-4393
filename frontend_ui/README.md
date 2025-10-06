@@ -1,77 +1,76 @@
 # Frontend UI
 
-This is the React frontend for the AI Coding Assistant.
+React frontend for the AI Coding Assistant. Sends prompts to the backend POST /ask and renders the AI output.
 
-Preview ports (local defaults):
-- Frontend UI: http://localhost:3000
-- Backend API: http://localhost:3001
+Ports:
+- Frontend UI (local): http://localhost:3000
+- Backend API (local):  http://localhost:3001
 
-Local preview note:
-- Start the backend first (port 3001) with GOOGLE_API_KEY set, then start the frontend (port 3000). The frontend uses REACT_APP_BACKEND_URL or defaults to http://localhost:3001.
+Preview note: Start the backend first on port 3001 with GOOGLE_API_KEY set, then start this frontend on port 3000.
 
-## Environment
+## Quickstart
 
-The frontend targets the backend at REACT_APP_BACKEND_URL.
+1) Ensure backend is running on http://localhost:3001 with GOOGLE_API_KEY set
+   - See backend README at ai-coding-assistant-4392/backend_api/README.md
+   - Quick checks:
+     - `curl -s http://localhost:3001/ | jq .`
+     - `curl -s -X POST http://localhost:3001/ask -H "Content-Type: application/json" -d '{"prompt":"hello"}' | jq .`
 
-- Default (if not set): http://localhost:3001
-- Override for non-local or custom deployments:
-  - Set REACT_APP_BACKEND_URL to your backend URL (e.g., https://api.example.com)
-  - Using a .env (recommended for local development):
-    ```
-    cd ai-coding-assistant-4393/frontend_ui
-    cp .env.example .env
-    # Edit .env and set:
-    # REACT_APP_BACKEND_URL=http://localhost:3001
-    ```
-  - You must restart the dev server after changing .env for changes to take effect.
-
-## Running locally
-
-- Frontend runs on port 3000
-- Backend expected on port 3001
-- If you change ports or hostnames, update REACT_APP_BACKEND_URL accordingly.
-
-Steps:
+2) Start frontend on port 3000
 ```
 cd ai-coding-assistant-4393/frontend_ui
-cp .env.example .env    # optional; default is http://localhost:3001
+cp .env.example .env   # optional; defaults to http://localhost:3001 if unset
+# If needed, edit .env:
+# REACT_APP_BACKEND_URL=http://localhost:3001
 npm install
 npm start
-# then visit http://localhost:3000
+# open http://localhost:3000
 ```
 
-The app expects the backend /ask endpoint to return JSON:
-```
-{ "output": "<AI response text>" }
-```
+3) Use the app
+- Type a prompt and click "Ask AI" (or press Ctrl/Cmd + Enter).
+- The UI calls POST {REACT_APP_BACKEND_URL}/ask with { "prompt": "..." }.
+- Expected response: { "output": "<AI response text>" }.
 
-## Quick troubleshooting
+## Environment variables
 
-Use the browser Network tab to inspect requests to /ask.
+- REACT_APP_BACKEND_URL
+  - Default when not set: http://localhost:3001
+  - Set in .env:
+    ```
+    REACT_APP_BACKEND_URL=http://localhost:3001
+    ```
+  - After changing .env, stop and restart `npm start`.
 
-- Request fails with 400:
-  - Likely input issue (e.g., empty prompt). The UI shows "Please enter a prompt."
-- Request fails with 500:
-  - Backend configuration issue; most commonly GOOGLE_API_KEY missing. See backend README to set/export the key.
-- Request fails with 502:
-  - Upstream Gemini error or network/timeouts. The app shows the backend-provided message when available.
-- Request blocked by CORS:
-  - Backend is permissive by default; if modified, ensure http://localhost:3000 is allowed in backend src/api/main.py.
-- Frontend cannot reach backend (Network error/Failed to fetch):
-  - Confirm backend is running on http://localhost:3001 and frontend on http://localhost:3000.
-  - If using a custom backend, set REACT_APP_BACKEND_URL in ai-coding-assistant-4393/frontend_ui/.env and restart `npm start`.
+Backend environment for reference:
+- GOOGLE_API_KEY (required for the FastAPI backend)
+
+## End-to-end checklist
+
+- Backend running at http://localhost:3001
+- GOOGLE_API_KEY is exported in backend shell
+- Frontend running at http://localhost:3000
+- Browser Network tab shows:
+  - POST http://localhost:3001/ask returns 200 with { "output": "..." }
+- UI displays the AI output without errors
+
+Cross-link: See ai-coding-assistant-4392/backend_api/README.md for backend Quickstart, environment, and curl examples.
+
+## Troubleshooting
+
+- 400 on /ask:
+  - Likely empty prompt. Enter text before submitting.
+- 500 on /ask (Server configuration error):
+  - Backend missing GOOGLE_API_KEY or not exported. Fix in backend environment.
+- 502 on /ask (Upstream/timeouts):
+  - Typically invalid/expired key or network issues. Check the error message.
+- CORS error in console:
+  - Backend is permissive by default. If changed, ensure http://localhost:3000 is allowed in backend src/api/main.py (CORSMiddleware).
+- Network error / Failed to fetch:
+  - Confirm backend is running at http://localhost:3001 and reachable.
+  - If using a custom URL/port, set REACT_APP_BACKEND_URL in .env and restart the dev server.
 - Port conflicts:
-  - Free the port or change it; if backend port changes, update REACT_APP_BACKEND_URL.
-
-## End-to-end check (cross-link)
-
-- Backend: Follow ai-coding-assistant-4392/backend_api/README.md to set GOOGLE_API_KEY and run the server. Verify:
-  - `curl http://localhost:3001/` returns `{ "message": "Healthy" }`
-  - `curl -X POST http://localhost:3001/ask ...` returns `{ "output": "..." }`
-- Frontend: Start this app, optionally set REACT_APP_BACKEND_URL, then:
-  - Open http://localhost:3000
-  - Submit a prompt; the output should render below
-  - In the Network tab, POST http://localhost:3001/ask should return 200 with `{ "output": "..." }`
+  - Free port 3000 or change the port. If backend port changes, update REACT_APP_BACKEND_URL in .env.
 
 ## Notes
 
